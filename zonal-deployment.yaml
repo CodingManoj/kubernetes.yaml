@@ -1,0 +1,30 @@
+# Deployment To make sure that the pods would deploy on 2 zones of the nodepool with 50-50% each
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend  # Your deployment name
+spec:
+  replicas: 3  # Adjust this value for your desired number of pods (must be a multiple of 2)
+  selector:
+    matchLabels:
+      app: frontend  # Label selector for pods
+  template:
+    metadata:
+      labels:
+        app: frontend  # Label for pods
+    spec:
+      # Target nodes in zone-1a and zone-1b (excludes zone-1c)
+      nodeSelector:
+        kubernetes.io/zone:
+          - zone-1a
+          - zone-1b
+      # Spread pods across zones (excluding zone-1c) with perfect balance (maxSkew: 0)
+      topologySpreadConstraints:
+      - maxSkew: 0  # Ensures perfect balance (all pods in 2 zones)
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway  # Schedule even if perfect spread is not met
+
+      containers:
+      - name: frontend-container  # Container name
+        image: your-image:latest  # Replace with your actual image
+        # ... other container configurations
